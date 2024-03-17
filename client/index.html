@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Game of Three</title>
+    <link rel="stylesheet" type="text/css" href="styles.css"/>
+</head>
+<body>
+<div id="game-area">
+    <h1>Game of Three</h1>
+    <div id="player-info"></div>
+<!--    <div id="move-buttons">-->
+<!--        <button id="move-minus-one" disabled>-1</button>-->
+<!--        <button id="move-zero" disabled>0</button>-->
+<!--        <button id="move-plus-one" disabled>1</button>-->
+<!--    </div>-->
+    <div id="game-info"></div>
+    <button id="start-button">Start Game</button>
+    <div id="turn-info"></div>
+    <div id="instructions">
+        <h2>How to Play:</h2>
+        <p>1. Click "Start Game" to begin the game.</p>
+        <p>
+            2. Once the game starts, you can take turns making moves by clicking
+            on the buttons.
+        </p>
+        <p>
+            3. The goal is to reach a total of 1 by dividing the current number by
+            3, rounding if necessary, and choosing -1, 0, or 1 as the next move.
+        </p>
+        <p>4. The game ends when a player reaches the target number of 1.</p>
+        <p>5. Enjoy playing!</p>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
