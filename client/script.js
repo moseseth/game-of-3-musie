@@ -73,6 +73,7 @@ function handleGameOver(message) {
 function handleGameState(gameState) {
 	const currentNumber = gameState.currentNumber;
 	const currentPlayerId = gameState.currentPlayer;
+	console.log(`currentNum: ${currentNumber}: currentPlayerId: ${currentPlayerId}`)
 
 	const playerInfo = document.getElementById("player-info");
 	playerInfo.innerHTML += `<p>${currentPlayer}: ${currentNumber}</p>`;

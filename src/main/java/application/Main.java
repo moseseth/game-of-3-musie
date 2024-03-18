@@ -1,3 +1,5 @@
+package application;
+
 import infrastructure.GameServer;
 
 public class Main {
