@@ -7,7 +7,7 @@
 ### Getting Started
 
 - Inorder to setup the project , it is straight forward.
-  * All you need is a java running in your machine that 16+
+  * All you need is a java running in your machine with version 16+
 - The .jar is already packaged with dependencies in the root of the repository.
 - Find the terminal and run:
 ```commandline
