@@ -40,5 +40,4 @@ localhost:9092 for ws // refer console for docker container
 - Nevertheless, you can watch the progress right from the terminal where the socket server is
 - running, there are outputs about the move.
 
-That is for me! 
-See you on game day :) hopefully 
+That is alles! 

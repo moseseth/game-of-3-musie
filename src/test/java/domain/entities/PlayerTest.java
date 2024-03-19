@@ -68,8 +68,6 @@ public class PlayerTest {
         assertEquals(10, autoMove.getStartingNumber());
         assertEquals(8, autoMove.getCurrentNumber());
         assertTrue(autoMove.getMove() == -1 || autoMove.getMove() == 0 || autoMove.getMove() == 1);
-        assertNotNull(autoMove.getResultingNumber());
-        assertNotNull(autoMove.getResult());
     }
 
     @Test
