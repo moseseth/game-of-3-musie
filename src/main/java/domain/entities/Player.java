@@ -1,4 +1,4 @@
-package domain.model;
+package domain.entities;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,11 +30,7 @@ public class Player {
     }
 
     public Move getLatestMove() {
-        if (moves.isEmpty()) {
-            return null;
-        } else {
-            return moves.get(moves.size() - 1);
-        }
+        return moves.isEmpty() ? null : moves.get(moves.size() - 1);
     }
 
     public Move initialMove(int startNumber) {
@@ -48,5 +44,12 @@ public class Player {
         int result = resultingNumber / 3;
 
         return new Move(startNumber, currentNumber, moveValue, resultingNumber, result);
+    }
+
+    public Move makeMove(int startNumber, int currentNumber, int move) {
+        int resultingNumber = currentNumber + move;
+        int result = resultingNumber / 3;
+
+        return new Move(startNumber, currentNumber, move, resultingNumber, result);
     }
 }

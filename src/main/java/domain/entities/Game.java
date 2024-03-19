@@ -1,17 +1,19 @@
-package domain.model;
+package domain.entities;
 
+import application.PlayerMove;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Getter
 @ToString
 public class Game {
-    private final String id;
+    private String id;
     private Player[] players;
     private boolean gameOver;
 
@@ -28,7 +30,6 @@ public class Game {
     }
 
     public Game(Player[] players) {
-        this();
         if (players.length <= MAX_PLAYERS) {
             this.players = Arrays.copyOf(players, MAX_PLAYERS);
         }
@@ -49,16 +50,6 @@ public class Game {
         players = playerList.toArray(new Player[0]);
     }
 
-    public Player getWinner() {
-        for (Player player : players) {
-            if (player != null && player.getLatestMove().getCurrentNumber() == 1) {
-                return player;
-            }
-        }
-
-        return null; // No winner found
-    }
-
     public Player findPlayerById(String id) {
         for (Player player : players) {
             if (player != null && player.getId().equals(id)) {
@@ -69,9 +60,28 @@ public class Game {
         return null; // Player not found
     }
 
-    public void handleAutoMove(Player player, int opponentIndex) {
+    public PlayerMove handleMove(Player player, int opponentIndex, int move) {
         if (isGameOver()) {
-            return;
+            return null;
+        }
+
+        Move currentMove;
+        if (player.getMoves().isEmpty()) {
+            currentMove = player.makeMove(
+                    getPlayers()[0].getLatestMove().getStartingNumber(),
+                    getPlayers()[0].getLatestMove().getCurrentNumber(), move);
+        } else {
+            currentMove = player.makeMove(
+                    player.getLatestMove().getStartingNumber(),
+                    getPlayers()[opponentIndex].getLatestMove().getCurrentNumber(), move);
+        }
+
+        return getPlayerMove(player, currentMove);
+    }
+
+    public PlayerMove handleAutoMove(Player player, int opponentIndex) {
+        if (isGameOver()) {
+            return null;
         }
 
         Move currentMove;
@@ -85,16 +95,30 @@ public class Game {
                     getPlayers()[opponentIndex].getLatestMove().getCurrentNumber());
         }
 
-        currentMove.setCurrentNumber(currentMove.getResult());
-        player.addMove(currentMove);
-        displayResult(player, currentMove);
-
-        if (player.getLatestMove().getCurrentNumber() == 1) {
-            gameOver = true;
-        }
+        return getPlayerMove(player, currentMove);
     }
 
-    public void displayResult(Player player, Move move) {
+    private PlayerMove getPlayerMove(Player player, Move currentMove) {
+        currentMove.setCurrentNumber(currentMove.getResult());
+        player.addMove(currentMove);
+        PlayerMove playerMove = notifyMove(player, currentMove);
+
+        gameOver = (player.getLatestMove().getCurrentNumber() == 1);
+        return playerMove;
+    }
+
+    public PlayerMove notifyMove(Player player, Move move) {
         System.out.println("Player " + player.getId() + " Moves--> " + move);
+        Map<String, Object> playerState = Map.of(
+                "playerName", player.getName(),
+                "playerPoint", move.getCurrentNumber()
+        );
+
+        return new PlayerMove(playerState, player);
+    }
+
+    public void resetGame() {
+        Arrays.fill(players, null);
+        gameOver = false;
     }
 }

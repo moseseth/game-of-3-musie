@@ -1,10 +1,13 @@
 package infrastructure;
 
+import application.PlayerMove;
 import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketIOServer;
-import domain.model.Player;
+import domain.entities.Player;
 import domain.services.GameService;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -12,8 +15,8 @@ public class GameServer {
     private final GameService gameService;
     private final SocketIOServer server;
 
-    public GameServer() {
-        this.gameService = new GameService();
+    public GameServer(GameService gameService) {
+        this.gameService = gameService;
         this.server = createSocketIOServer();
         initializeSocketEventListeners();
     }
@@ -28,46 +31,53 @@ public class GameServer {
     private void initializeSocketEventListeners() {
         // Add event listeners
         server.addConnectListener(client -> {
+            String sessionId = client.getSessionId().toString();
             System.out.println("Player connected: " + client.getSessionId());
-            gameService.addPlayerWithRandomUsername(client.getSessionId().toString());
+
+            if(gameService.isGameOver()) {
+                gameService.resetGame();
+            }
+
+            gameService.addPlayerWithRandomUsername(sessionId);
         });
 
         server.addEventListener("start-game", String.class, (client, data, ackRequest) -> {
             if (gameService.getPlayers().length == 1) {
-                // Notify player 1 that they are waiting for player 2 to join
                 server.getClient(client.getSessionId()).sendEvent("waiting-for-player-2");
             }
 
             if (gameService.getPlayers().length == 2) {
                 System.out.println("Starting the game...");
+
                 gameService.startGame(client.getSessionId().toString());
+                Player currentPlayer = gameService.getCurrentPlayer();
+                String currentPlayerId = currentPlayer.getId();
 
-                // Notify the initiating player that the other player has joined
-                server.getClient(UUID.fromString(gameService.getCurrentPlayer().getId())).sendEvent("player-joined");
+                Map<String, Object> moves = Map.of(
+                        "id", currentPlayerId,
+                        "randomNumber", currentPlayer.getLatestMove().getCurrentNumber()
+                );
 
-                server.getClient(UUID.fromString(gameService.getCurrentPlayer().getId())).sendEvent("random-number",
-                        gameService.getCurrentPlayer().getLatestMove().getCurrentNumber());
-                server.getClient(UUID.fromString(gameService.getOpponent().getId())).sendEvent("random-number",
-                        gameService.getCurrentPlayer().getLatestMove().getCurrentNumber());
-
-                // Send the "game-started" event to both players along with the initiator's ID
-                client.sendEvent("game-started", data);
+                server.getClient(UUID.fromString(currentPlayerId)).sendEvent("player-joined");
+                server.getBroadcastOperations().sendEvent("random-number", moves);
                 server.getBroadcastOperations().sendEvent("game-started", data);
+                client.sendEvent("game-started", data);
+
+                if (!gameService.isAutomatic()) {
+                    return;
+                }
 
                 boolean isOpponentTurn = true;
                 while (!gameService.isGameOver()) {
-                    if (isOpponentTurn) {
-                        gameService.handleAutoMove(gameService.getOpponent(), 0);
-                    } else {
-                        gameService.handleAutoMove(gameService.getCurrentPlayer(), 1);
-                    }
-
-                    handleGameState();
+                    Player player = isOpponentTurn ? gameService.getOpponent() : gameService.getCurrentPlayer();
+                    int opponentIndex = isOpponentTurn ? 0 : 1;
+                    PlayerMove playerMove = gameService.handleAutoMove(player, opponentIndex);
+                    handleGameState(playerMove);
 
                     try {
-                        TimeUnit.SECONDS.sleep(1); // Adjust the delay time as needed
+                        TimeUnit.SECONDS.sleep(1);
                     } catch (InterruptedException e) {
-                        System.out.println(e.getMessage());
+                        System.err.println(e.getMessage());
                     }
 
                     isOpponentTurn = !isOpponentTurn;
@@ -76,33 +86,31 @@ public class GameServer {
             }
         });
 
-//        server.addEventListener("player-move", String.class, (client, move, ackRequest) -> {
-//            System.out.println("Player " + client.getSessionId() + " made a move: " + move);
-//
-//            // Call the GameService to handle the move
-//            gameService.handleManualMove(Integer.parseInt(move));
-//            handleGameState();
-//        });
+        server.addEventListener("player-move", String.class, (client, move, ackRequest) -> {
+            Player player = gameService.findPlayerById(client.getSessionId().toString());
+            String opponent = gameService.getOpponent().getId();
+            int opponentIndex = Objects.equals(opponent, player.getId()) ? 0 : 1;
+
+            PlayerMove playerMove = gameService.handleMove(player,  opponentIndex, Integer.parseInt(move));
+            handleGameState(playerMove);
+        });
 
         server.addDisconnectListener(client -> {
             System.out.println("Player disconnected: " + client.getSessionId());
 
-            // Remove the player from the game when they disconnect
             Player player = gameService.findPlayerById(client.getSessionId().toString());
             gameService.removePlayer(player);
         });
     }
 
-    private void handleGameState() {
-        if (gameService.isGameOver()) {
-            Player winner = gameService.getWinner();
-            server.getBroadcastOperations().sendEvent("game-over", "Winner: " + winner.getName());
+    private void handleGameState(PlayerMove playerMove) {
+        if (playerMove.move().containsValue(1)) {
+            server.getBroadcastOperations().sendEvent("game-over", "Winner: " + playerMove.player().getName());
         } else {
-            // Notify the next player that it's their turn
-            server.getClient(UUID.fromString(gameService.getCurrentPlayer().getId())).sendEvent("your-turn");
-            // Notify the opponent that it's not their turn anymore
-            server.getClient(UUID.fromString(gameService.getOpponent().getId())).sendEvent("opponent-turn");
+            server.getClient(UUID.fromString(playerMove.player().getId())).sendEvent("your-turn");
         }
+
+        server.getBroadcastOperations().sendEvent("game-state", playerMove.move());
     }
 
     public void startGameServer() {

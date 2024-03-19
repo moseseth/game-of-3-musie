@@ -1,20 +1,21 @@
 package domain.services;
 
-import domain.model.Game;
-import domain.model.Move;
-import domain.model.Player;
-import lombok.Setter;
-import util.UsernameGenerator;
+import application.PlayerMove;
+import domain.entities.Game;
+import domain.entities.Move;
+import domain.entities.Player;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Random;
+import java.util.Set;
 
 public class GameService {
-    @Setter
-    private Game game;
+    private final Game game;
     private final Set<String> uniqueSessionIds;
 
-    public GameService() {
-        this.game = new Game();
+    public GameService(Game game) {
+        this.game = game;
         this.uniqueSessionIds = new HashSet<>();
     }
 
@@ -28,6 +29,14 @@ public class GameService {
 
     public void removePlayer(Player player) {
         game.removePlayer(player);
+    }
+
+    public void resetGame() {
+        game.resetGame();
+    }
+
+    public boolean isAutomatic() {
+        return game.isAutomatic();
     }
 
     public Player[] getPlayers() {
@@ -45,11 +54,9 @@ public class GameService {
             Player currentPlayer = getCurrentPlayer();
 
             Move move = currentPlayer.initialMove(startingNumber);
-            game.displayResult(currentPlayer, move);
-
             currentPlayer.addMove(move);
-            players[0] = currentPlayer;
-            setGame(new Game(players));
+
+            game.notifyMove(currentPlayer, move);
         } else {
             swapPlayers();
         }
@@ -67,21 +74,17 @@ public class GameService {
         return game.isGameOver();
     }
 
-    public Player getWinner() {
-        return game.getWinner();
+    public PlayerMove handleMove(Player player, int opponentIndex, int move) {
+        return game.handleMove(player, opponentIndex, move);
     }
 
-//    public void handleManualMove(int move) {
-//        game.playRound(game.getCurrentPlayer(), move);
-//    }
-
-    public void handleAutoMove(Player player, int opponentIndex) {
-        game.handleAutoMove(player, opponentIndex);
+    public PlayerMove handleAutoMove(Player player, int opponentIndex) {
+        return game.handleAutoMove(player, opponentIndex);
     }
 
     public void addPlayerWithRandomUsername(String sessionId) {
-        String username = UsernameGenerator.generateUniqueRandomUsername();
-        Player newPlayer = new Player(sessionId, username);
+        String playerName = "Player-" + sessionId.substring(0, 4);
+        Player newPlayer = new Player(sessionId, playerName);
         addPlayer(newPlayer);
     }
 
@@ -93,9 +96,10 @@ public class GameService {
     }
 
     private int generateRandomNumber() {
-        // Random random = new Random();
-        // return random.nextInt(Integer.MAX_VALUE); // Generate a random number
-        return 100;
+//         Random random = new Random();
+//         return random.nextInt(Integer.MAX_VALUE);
+
+        return 56;
     }
 }
 

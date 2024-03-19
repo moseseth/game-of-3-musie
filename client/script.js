@@ -1,6 +1,6 @@
 const socket = io("http://localhost:9092");
 
-let currentPlayer = "Player 1";
+let currentPlayer = "Player-";
 let gameStarted = false;
 
 // Event listeners
@@ -15,7 +15,7 @@ socket.on("random-number", handleRandomNumber);
 socket.on("game-started", handleGameStarted);
 socket.on("game-over", handleGameOver);
 socket.on("game-state", handleGameState);
-// socket.on("player-move", handleManualPlayerMove);
+socket.on("player-move", handleManualPlayerMove);
 socket.on("waiting-for-player-2", handleWaitingForPlayer2);
 socket.on("game-full", handleGameFull);
 socket.on('disconnect', (reason) => {
@@ -29,6 +29,8 @@ function handleStartButtonClick() {
 		const currentPlayerId = socket.id;
 		socket.emit("start-game", currentPlayerId);
 		gameStarted = true;
+		// let checkbox = document.getElementById("toggle-switch");
+		// console.log(checkbox.checked);
 	}
 }
 
@@ -42,11 +44,14 @@ function handleSocketConnect() {
 }
 
 function handleRandomNumber(randomNumber) {
+	const currentNumber = randomNumber.randomNumber;
+	const currentPlayerId = randomNumber.id;
+
 	const playerInfo = document.getElementById("player-info");
-	playerInfo.innerHTML += `<p>${currentPlayer}: ${randomNumber}</p>`;
+	playerInfo.innerHTML += `<p>${currentPlayer + currentPlayerId.substring(0, 4)}: ${currentNumber}</p>`;
 	playerInfo.scrollTop = playerInfo.scrollHeight;
 
-	currentPlayer = currentPlayer === "Player 1" ? "Player 2" : "Player 1";
+	currentPlayer = currentPlayer + currentPlayerId.substring(0, 4);
 
 	disableStartButton();
 }
@@ -71,20 +76,18 @@ function handleGameOver(message) {
 }
 
 function handleGameState(gameState) {
-	const currentNumber = gameState.currentNumber;
-	const currentPlayerId = gameState.currentPlayer;
-	console.log(`currentNum: ${currentNumber}: currentPlayerId: ${currentPlayerId}`)
+	const currentNumber = gameState.playerPoint;
+	const currentPlayerId = gameState.playerName;
 
 	const playerInfo = document.getElementById("player-info");
-	playerInfo.innerHTML += `<p>${currentPlayer}: ${currentNumber}</p>`;
+	playerInfo.innerHTML += `<p>${currentPlayerId}: ${currentNumber}</p>`;
 	playerInfo.scrollTop = playerInfo.scrollHeight;
 
-	if (currentPlayerId === socket.id) {
-		document.getElementById("turn-info").innerText = "Opponent's turn";
-		// disableMoveButtons();
-	} else {
-		document.getElementById("turn-info").innerText = "Your turn";
-		// enableMoveButtons();
+	const turnInfo = document.getElementById("turn-info");
+	turnInfo.innerText = (currentPlayerId === currentPlayer) ? "Opponent's turn" : "Your turn";
+
+	if (currentNumber === 1) {
+		turnInfo.innerText = "Winner announced";
 	}
 }
 
@@ -110,10 +113,18 @@ function enableStartButton() {
 // 	document.getElementById("move-zero").disabled = true;
 // 	document.getElementById("move-plus-one").disabled = true;
 // }
-
+//
 // function enableMoveButtons() {
 // 	document.getElementById("move-minus-one").disabled = false;
 // 	document.getElementById("move-zero").disabled = false;
 // 	document.getElementById("move-plus-one").disabled = false;
 // }
+
+// document.getElementById('toggle-switch').addEventListener('change', function() {
+// 	if (this.checked) {
+// 		enableMoveButtons()
+// 	} else {
+// 		disableMoveButtons()
+// 	}
+// });
 
