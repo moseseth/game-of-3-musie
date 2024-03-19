@@ -35,8 +35,8 @@ public class GameService {
         game.resetGame();
     }
 
-    public boolean isAutomatic() {
-        return game.isAutomatic();
+    public void setAutoMode(boolean mode) {
+        game.setAutomatic(mode);
     }
 
     public Player[] getPlayers() {
@@ -49,17 +49,16 @@ public class GameService {
 
     public void startGame(String sessionId) {
         Player[] players = game.getPlayers();
-        if (players.length != 2 || Objects.equals(players[0].getId(), sessionId)) {
-            int startingNumber = generateRandomNumber();
-            Player currentPlayer = getCurrentPlayer();
 
-            Move move = currentPlayer.initialMove(startingNumber);
-            currentPlayer.addMove(move);
-
-            game.notifyMove(currentPlayer, move);
-        } else {
+        if (!Objects.equals(players[0].getId(), sessionId)) {
             swapPlayers();
         }
+
+        int startingNumber = generateRandomNumber();
+        Player currentPlayer = getCurrentPlayer();
+        Move move = currentPlayer.initialMove(startingNumber);
+        currentPlayer.addMove(move);
+        game.notifyMove(currentPlayer, move);
     }
 
     public Player getCurrentPlayer() {
@@ -70,8 +69,16 @@ public class GameService {
         return game.getPlayers()[1];
     }
 
-    public boolean isGameOver() {
-        return game.isGameOver();
+    public boolean isWinner() {
+        return game.isWinner();
+    }
+
+    public boolean isLoser() {
+        return game.isLoser();
+    }
+
+    public boolean isManualMode() {
+        return !game.isAutomatic();
     }
 
     public PlayerMove handleMove(Player player, int opponentIndex, int move) {

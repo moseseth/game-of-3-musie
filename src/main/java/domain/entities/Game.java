@@ -15,7 +15,9 @@ import java.util.UUID;
 public class Game {
     private String id;
     private Player[] players;
-    private boolean gameOver;
+
+    private boolean winner;
+    private boolean loser;
 
     @Setter
     private boolean automatic;
@@ -25,7 +27,8 @@ public class Game {
     public Game() {
         this.id = UUID.randomUUID().toString();
         this.players = new Player[MAX_PLAYERS];
-        this.gameOver = false;
+        this.winner = false;
+        this.loser = false;
         this.automatic = true;
     }
 
@@ -61,7 +64,7 @@ public class Game {
     }
 
     public PlayerMove handleMove(Player player, int opponentIndex, int move) {
-        if (isGameOver()) {
+        if (isWinner() || isLoser()) {
             return null;
         }
 
@@ -80,7 +83,7 @@ public class Game {
     }
 
     public PlayerMove handleAutoMove(Player player, int opponentIndex) {
-        if (isGameOver()) {
+        if (isWinner()) {
             return null;
         }
 
@@ -103,12 +106,14 @@ public class Game {
         player.addMove(currentMove);
         PlayerMove playerMove = notifyMove(player, currentMove);
 
-        gameOver = (player.getLatestMove().getCurrentNumber() == 1);
+        this.winner = (player.getLatestMove().getCurrentNumber() == 1);
+        this.loser = (player.getLatestMove().getCurrentNumber() < 1);
+
         return playerMove;
     }
 
     public PlayerMove notifyMove(Player player, Move move) {
-        System.out.println("Player " + player.getId() + " Moves--> " + move);
+        System.out.println("Player " + player.getId() + " Moves --> " + move);
         Map<String, Object> playerState = Map.of(
                 "playerName", player.getName(),
                 "playerPoint", move.getCurrentNumber()
@@ -119,6 +124,7 @@ public class Game {
 
     public void resetGame() {
         Arrays.fill(players, null);
-        gameOver = false;
+        winner = false;
+        loser = false;
     }
 }

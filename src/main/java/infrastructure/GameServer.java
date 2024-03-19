@@ -4,8 +4,11 @@ import application.PlayerMove;
 import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketIOServer;
 import domain.entities.Player;
+import domain.events.GameEvent;
+import domain.events.GameStartedEvent;
 import domain.services.GameService;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -34,16 +37,23 @@ public class GameServer {
             String sessionId = client.getSessionId().toString();
             System.out.println("Player connected: " + client.getSessionId());
 
-            if(gameService.isGameOver()) {
+            if (gameService.isWinner() || gameService.isLoser()) {
                 gameService.resetGame();
             }
 
             gameService.addPlayerWithRandomUsername(sessionId);
         });
 
-        server.addEventListener("start-game", String.class, (client, data, ackRequest) -> {
+        server.addEventListener(GameEvent.START_GAME.getEventName(), GameStartedEvent.class, (client, data, ackRequest) -> {
+            String playerId = data.getPlayerId();
+            boolean isAutoMode = data.isAutoMode();
+
+            if (isAutoMode) {
+                gameService.setAutoMode(false);
+            }
+
             if (gameService.getPlayers().length == 1) {
-                server.getClient(client.getSessionId()).sendEvent("waiting-for-player-2");
+                server.getClient(client.getSessionId()).sendEvent(GameEvent.WAITING_FOR_PLAYER_2.getEventName());
             }
 
             if (gameService.getPlayers().length == 2) {
@@ -58,17 +68,17 @@ public class GameServer {
                         "randomNumber", currentPlayer.getLatestMove().getCurrentNumber()
                 );
 
-                server.getClient(UUID.fromString(currentPlayerId)).sendEvent("player-joined");
-                server.getBroadcastOperations().sendEvent("random-number", moves);
-                server.getBroadcastOperations().sendEvent("game-started", data);
-                client.sendEvent("game-started", data);
+                server.getClient(UUID.fromString(currentPlayerId)).sendEvent(GameEvent.PLAYER_JOINED.getEventName());
+                server.getBroadcastOperations().sendEvent(GameEvent.RANDOM_NUMBER.getEventName(), moves);
+                server.getBroadcastOperations().sendEvent(GameEvent.GAME_STARTED.getEventName(), playerId);
+                client.sendEvent(GameEvent.GAME_STARTED.getEventName(), playerId);
 
-                if (!gameService.isAutomatic()) {
+                if (gameService.isManualMode()) {
                     return;
                 }
 
                 boolean isOpponentTurn = true;
-                while (!gameService.isGameOver()) {
+                while (!gameService.isWinner()) {
                     Player player = isOpponentTurn ? gameService.getOpponent() : gameService.getCurrentPlayer();
                     int opponentIndex = isOpponentTurn ? 0 : 1;
                     PlayerMove playerMove = gameService.handleAutoMove(player, opponentIndex);
@@ -82,17 +92,18 @@ public class GameServer {
 
                     isOpponentTurn = !isOpponentTurn;
                 }
-
             }
         });
 
-        server.addEventListener("player-move", String.class, (client, move, ackRequest) -> {
+        server.addEventListener(GameEvent.PLAYER_MOVE.getEventName(), String.class, (client, move, ackRequest) -> {
             Player player = gameService.findPlayerById(client.getSessionId().toString());
             String opponent = gameService.getOpponent().getId();
             int opponentIndex = Objects.equals(opponent, player.getId()) ? 0 : 1;
 
-            PlayerMove playerMove = gameService.handleMove(player,  opponentIndex, Integer.parseInt(move));
+            PlayerMove playerMove = gameService.handleMove(player, opponentIndex, Integer.parseInt(move));
             handleGameState(playerMove);
+
+            server.getBroadcastOperations().sendEvent(GameEvent.GAME_STARTED.getEventName(), player.getId());
         });
 
         server.addDisconnectListener(client -> {
@@ -104,13 +115,17 @@ public class GameServer {
     }
 
     private void handleGameState(PlayerMove playerMove) {
-        if (playerMove.move().containsValue(1)) {
-            server.getBroadcastOperations().sendEvent("game-over", "Winner: " + playerMove.player().getName());
-        } else {
-            server.getClient(UUID.fromString(playerMove.player().getId())).sendEvent("your-turn");
+        if (gameService.isWinner()) {
+            server.getBroadcastOperations().sendEvent(GameEvent.GAME_OVER.getEventName(),
+                    "Winner: " + playerMove.player().getName());
         }
 
-        server.getBroadcastOperations().sendEvent("game-state", playerMove.move());
+        if (gameService.isLoser()) {
+            server.getBroadcastOperations().sendEvent(GameEvent.GAME_OVER.getEventName(),
+                    "Loser: " + playerMove.player().getName());
+        }
+
+        server.getBroadcastOperations().sendEvent(GameEvent.GAME_STATE.getEventName(), playerMove.move());
     }
 
     public void startGameServer() {

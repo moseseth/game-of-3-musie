@@ -1,13 +1,15 @@
-const socket = io("http://localhost:9092");
+const socket = io("http://localhost:9092", {
+	transports: ['websocket']
+});
 
 let currentPlayer = "Player-";
 let gameStarted = false;
 
 // Event listeners
 document.getElementById("start-button").addEventListener("click", handleStartButtonClick);
-// document.getElementById("move-minus-one").addEventListener("click", () => handleManualPlayerMove("-1"));
-// document.getElementById("move-zero").addEventListener("click", () => handleManualPlayerMove("0"));
-// document.getElementById("move-plus-one").addEventListener("click", () => handleManualPlayerMove("1"));
+document.getElementById("move-minus-one").addEventListener("click", () => handleManualPlayerMove("-1"));
+document.getElementById("move-zero").addEventListener("click", () => handleManualPlayerMove("0"));
+document.getElementById("move-plus-one").addEventListener("click", () => handleManualPlayerMove("1"));
 
 // Socket event handlers
 socket.on("connect", handleSocketConnect);
@@ -27,11 +29,15 @@ socket.on('disconnect', (reason) => {
 function handleStartButtonClick() {
 	if (!gameStarted) {
 		const currentPlayerId = socket.id;
-		socket.emit("start-game", currentPlayerId);
+		const autoMode = document.getElementById("toggle-switch").checked;
+		socket.emit("start-game",  { playerId: currentPlayerId, autoMode: autoMode });
 		gameStarted = true;
-		// let checkbox = document.getElementById("toggle-switch");
-		// console.log(checkbox.checked);
 	}
+}
+
+function disableAutoModeToggle() {
+	let checkbox = document.getElementById("toggle-switch");
+	checkbox.disabled = true;
 }
 
 function handleManualPlayerMove(move) {
@@ -54,25 +60,30 @@ function handleRandomNumber(randomNumber) {
 	currentPlayer = currentPlayer + currentPlayerId.substring(0, 4);
 
 	disableStartButton();
+
+	const autoMode = document.getElementById("toggle-switch").checked;
+	if (autoMode) {
+		disableAutoModeToggle();
+		enableMoveButtons();
+	}
 }
 
 function handleGameStarted(startingPlayerId) {
-	document.getElementById("game-info").innerText = "";
-
 	const isStartingPlayer = startingPlayerId === socket.id;
 
 	if (isStartingPlayer) {
 		document.getElementById("turn-info").innerText = "Opponent's turn";
-		// disableMoveButtons();
+		disableMoveButtons();
 	} else {
 		document.getElementById("turn-info").innerText = "Your turn";
-		// enableMoveButtons();
+		enableMoveButtons();
 	}
 }
 
 function handleGameOver(message) {
+	document.getElementById("turn-info").innerText = "";
 	document.getElementById("game-info").innerText = message;
-	// disableMoveButtons();
+	disableMoveButtons();
 }
 
 function handleGameState(gameState) {
@@ -87,7 +98,7 @@ function handleGameState(gameState) {
 	turnInfo.innerText = (currentPlayerId === currentPlayer) ? "Opponent's turn" : "Your turn";
 
 	if (currentNumber === 1) {
-		turnInfo.innerText = "Winner announced";
+		turnInfo.innerText = "";
 	}
 }
 
@@ -108,23 +119,23 @@ function enableStartButton() {
 	document.getElementById("start-button").disabled = false;
 }
 
-// function disableMoveButtons() {
-// 	document.getElementById("move-minus-one").disabled = true;
-// 	document.getElementById("move-zero").disabled = true;
-// 	document.getElementById("move-plus-one").disabled = true;
-// }
-//
-// function enableMoveButtons() {
-// 	document.getElementById("move-minus-one").disabled = false;
-// 	document.getElementById("move-zero").disabled = false;
-// 	document.getElementById("move-plus-one").disabled = false;
-// }
+function disableMoveButtons() {
+	document.getElementById("move-minus-one").disabled = true;
+	document.getElementById("move-zero").disabled = true;
+	document.getElementById("move-plus-one").disabled = true;
+}
 
-// document.getElementById('toggle-switch').addEventListener('change', function() {
-// 	if (this.checked) {
-// 		enableMoveButtons()
-// 	} else {
-// 		disableMoveButtons()
-// 	}
-// });
+function enableMoveButtons() {
+	document.getElementById("move-minus-one").disabled = false;
+	document.getElementById("move-zero").disabled = false;
+	document.getElementById("move-plus-one").disabled = false;
+}
+
+document.getElementById('toggle-switch').addEventListener('change', function() {
+	if (this.checked) {
+		enableMoveButtons()
+	} else {
+		disableMoveButtons()
+	}
+});
 
