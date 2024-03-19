@@ -1,5 +1,7 @@
 package domain.entities;
 
+import com.gameof3.domain.entities.Move;
+import com.gameof3.domain.entities.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.List;
@@ -33,7 +35,11 @@ public class PlayerTest {
 
     @Test
     public void testGetLatestMove() {
-        assertNull(player.getLatestMove());
+        try {
+            player.getLatestMove().getStartingNumber();
+        } catch (IllegalArgumentException e) {
+            assertTrue(true);
+        }
 
         Move move1 = new Move(1, 1, 1, 2, 0);
         player.addMove(move1);

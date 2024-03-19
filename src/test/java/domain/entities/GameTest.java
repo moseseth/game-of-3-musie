@@ -1,10 +1,11 @@
 package domain.entities;
 
-import application.PlayerMove;
+import com.gameof3.application.PlayerMove;
+import com.gameof3.domain.entities.Game;
+import com.gameof3.domain.entities.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,25 +52,25 @@ public class GameTest {
         assertEquals(player1, foundPlayer.get());
     }
 
-//    @Test
-//    public void testHandleMove() {
-//        game.addPlayer(player1);
-//        game.addPlayer(player2);
-//
-//        Optional<PlayerMove> playerMove = game.handleMove(player1, 1, -1);
-//
-//        assertNotNull(playerMove);
-//    }
-//
-//    @Test
-//    public void testHandleAutoMove() {
-//        game.addPlayer(player1);
-//        game.addPlayer(player2);
-//
-//        Optional<PlayerMove> playerMove = game.handleAutoMove(player1, 1);
-//
-//        assertNotNull(playerMove);
-//    }
+    @Test
+    public void testHandleMove() {
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+
+        Optional<PlayerMove> playerMove = game.handleMove(player1, 1, -1);
+
+        assertNotNull(playerMove);
+    }
+
+    @Test
+    public void testHandleAutoMove() {
+        game.addPlayer(player1);
+        game.addPlayer(player2);
+
+        Optional<PlayerMove> playerMove = game.handleAutoMove(player1, 1);
+
+        assertNotNull(playerMove);
+    }
 
     @Test
     public void testResetGame() {

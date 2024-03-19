@@ -1,13 +1,12 @@
 package domain.services;
 
-import application.PlayerMove;
-import domain.entities.Game;
-import domain.entities.Player;
+import com.gameof3.domain.entities.Game;
+import com.gameof3.domain.entities.Player;
+import com.gameof3.domain.services.GameService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 

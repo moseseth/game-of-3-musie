@@ -1,8 +1,9 @@
 package infrastructure;
 
 import com.corundumstudio.socketio.SocketIOClient;
-import domain.entities.Player;
-import domain.services.GameService;
+import com.gameof3.domain.entities.Player;
+import com.gameof3.domain.services.GameService;
+import com.gameof3.infrastructure.GameServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
