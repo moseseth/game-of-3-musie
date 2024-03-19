@@ -4,7 +4,7 @@
 - Socket.io based both in client and server
 - A desire to see a closer look at the task :)
 
-![screenshot](g3.png)
+<img alt="screenshot" height="440" src="g3.png" width="260"/>
 
 ### Getting Started
 
