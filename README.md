@@ -4,6 +4,7 @@
 - Socket.io based both in client and server
 - A desire to see a closer look at the task :)
 
+
 ### Getting Started
 
 - Inorder to setup the project , it is straight forward.
@@ -18,6 +19,14 @@ Once the socket based application is running.
 - (Run the index.html) you will be able to navigate your way.
 - Please read Key notes.
 - Perhaps, all technical details will be left for the interview
+
+### Docker compose
+```
+docker-compose up -d
+
+localhost:8080 for webclient 
+localhost:9092 for ws // refer console for docker container
+```
 
 ### Key notes:
 - The game has two modes, one manual the other automatic

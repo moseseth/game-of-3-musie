@@ -1,16 +1,15 @@
 package com.gameof3.infrastructure;
 
-import com.gameof3.application.PlayerMove;
-import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.ConnectListener;
 import com.corundumstudio.socketio.listener.DataListener;
 import com.corundumstudio.socketio.listener.DisconnectListener;
+import com.gameof3.application.PlayerMove;
+import com.gameof3.domain.entities.Move;
+import com.gameof3.domain.entities.Player;
 import com.gameof3.domain.events.GameEvent;
 import com.gameof3.domain.events.GameStartedEvent;
 import com.gameof3.domain.services.GameService;
-import com.gameof3.domain.entities.Move;
-import com.gameof3.domain.entities.Player;
 import lombok.Setter;
 
 import java.util.Map;
@@ -24,17 +23,10 @@ public class GameServer {
     @Setter
     private SocketIOServer server;
 
-    public GameServer(GameService gameService) {
+    public GameServer(GameService gameService, SocketIOServer server) {
         this.gameService = gameService;
-        this.server = createSocketIOServer();
+        this.server = server;
         initializeSocketEventListeners();
-    }
-
-    private SocketIOServer createSocketIOServer() {
-        Configuration config = new Configuration();
-        config.setHostname("localhost");
-        config.setPort(9092);
-        return new SocketIOServer(config);
     }
 
     private void initializeSocketEventListeners() {
@@ -158,15 +150,4 @@ public class GameServer {
 
         server.getBroadcastOperations().sendEvent(gameStateEvent, playerMove.move());
     }
-
-    public void startGameServer() {
-        this.server.start();
-        System.out.println("Socket.IO server started");
-    }
-
-    public void stopGameServer() {
-        server.stop();
-        System.out.println("Socket.IO server stopped");
-    }
-
 }

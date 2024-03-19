@@ -1,6 +1,8 @@
 package infrastructure;
 
+import com.corundumstudio.socketio.BroadcastOperations;
 import com.corundumstudio.socketio.SocketIOClient;
+import com.corundumstudio.socketio.SocketIOServer;
 import com.gameof3.domain.entities.Player;
 import com.gameof3.domain.services.GameService;
 import com.gameof3.infrastructure.GameServer;
@@ -17,12 +19,17 @@ public class GameServerTest {
     @Mock
     private GameService gameServiceMock;
 
+    @Mock
+    SocketIOServer mockSocketIOServer;
+
     private GameServer gameServer;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        gameServer = new GameServer(gameServiceMock);
+        gameServer = new GameServer(gameServiceMock, mockSocketIOServer);
+        BroadcastOperations broadcastOperationsMock = mock(BroadcastOperations.class);
+        when(mockSocketIOServer.getBroadcastOperations()).thenReturn(broadcastOperationsMock);
     }
 
     @Test

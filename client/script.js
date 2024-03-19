@@ -1,5 +1,6 @@
 const socket = io("http://localhost:9092", {
-	transports: ['websocket']
+	transports: ['websocket'],
+	reconnection: false,
 });
 
 let currentPlayer = "Player-";

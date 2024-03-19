@@ -1,0 +1,18 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - HOSTNAME=app
+      - PORT=9092
+    ports:
+      - "9092:9092"
+
+  web:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
