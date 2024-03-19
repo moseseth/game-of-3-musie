@@ -4,6 +4,7 @@
 - Socket.io based both in client and server
 - A desire to see a closer look at the task :)
 
+![screenshot](g3.png)
 
 ### Getting Started
 
