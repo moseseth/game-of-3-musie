@@ -32,6 +32,10 @@ function handleStartButtonClick() {
 		const autoMode = document.getElementById("toggle-switch").checked;
 		socket.emit("start-game",  { playerId: currentPlayerId, autoMode: autoMode });
 		gameStarted = true;
+
+		if(!autoMode) {
+			disableAutoModeToggle();
+		}
 	}
 }
 

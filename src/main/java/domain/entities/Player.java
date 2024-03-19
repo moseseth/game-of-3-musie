@@ -7,6 +7,7 @@ import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 @ToString
@@ -34,7 +35,7 @@ public class Player {
     }
 
     public Move initialMove(int startNumber) {
-        return new Move(startNumber, startNumber, null, null, null);
+        return new Move(startNumber, startNumber, 0, 0, 0);
     }
 
     public Move generateAutoMove(int startNumber, int currentNumber) {
@@ -47,6 +48,10 @@ public class Player {
     }
 
     public Move makeMove(int startNumber, int currentNumber, int move) {
+        if (Math.abs(move) != 1 && move != 0) {
+            throw new IllegalArgumentException("Number must be either -1, 0, or 1");
+        }
+
         int resultingNumber = currentNumber + move;
         int result = resultingNumber / 3;
 

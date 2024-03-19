@@ -5,26 +5,17 @@ import domain.entities.Game;
 import domain.entities.Move;
 import domain.entities.Player;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 public class GameService {
     private final Game game;
-    private final Set<String> uniqueSessionIds;
 
     public GameService(Game game) {
         this.game = game;
-        this.uniqueSessionIds = new HashSet<>();
     }
 
     public void addPlayer(Player player) {
-        if (uniqueSessionIds.add(player.getId())) {
-            game.addPlayer(player);
-        } else {
-            System.out.println("Player with sessionId " + player.getId() + " already exists.");
-        }
+        game.addPlayer(player);
     }
 
     public void removePlayer(Player player) {
@@ -39,18 +30,19 @@ public class GameService {
         game.setAutomatic(mode);
     }
 
-    public Player[] getPlayers() {
+    public LinkedList<Player> getPlayers() {
         return game.getPlayers();
     }
 
-    public Player findPlayerById(String sessionId) {
-        return game.findPlayerById(sessionId);
+    public Optional<Player> findPlayerById(String sessionId) {
+        LinkedList<Player> players = getPlayers();
+        return game.findById(players, sessionId);
     }
 
     public void startGame(String sessionId) {
-        Player[] players = game.getPlayers();
+        LinkedList<Player> players = game.getPlayers();
 
-        if (!Objects.equals(players[0].getId(), sessionId)) {
+        if (!Objects.equals(players.get(0).getId(), sessionId)) {
             swapPlayers();
         }
 
@@ -62,11 +54,11 @@ public class GameService {
     }
 
     public Player getCurrentPlayer() {
-        return game.getPlayers()[0];
+        return game.getPlayers().get(0);
     }
 
     public Player getOpponent() {
-        return game.getPlayers()[1];
+        return game.getPlayers().get(1);
     }
 
     public boolean isWinner() {
@@ -81,11 +73,11 @@ public class GameService {
         return !game.isAutomatic();
     }
 
-    public PlayerMove handleMove(Player player, int opponentIndex, int move) {
+    public Optional<PlayerMove> handleMove(Player player, int opponentIndex, int move) {
         return game.handleMove(player, opponentIndex, move);
     }
 
-    public PlayerMove handleAutoMove(Player player, int opponentIndex) {
+    public Optional<PlayerMove> handleAutoMove(Player player, int opponentIndex) {
         return game.handleAutoMove(player, opponentIndex);
     }
 
@@ -96,17 +88,19 @@ public class GameService {
     }
 
     public void swapPlayers() {
-        Player[] players = game.getPlayers();
-        Player temp = players[0];
-        players[0] = players[1];
-        players[1] = temp;
+        LinkedList<Player> players = game.getPlayers();
+        if (players != null && players.size() >= 2) {
+            Player temp = players.get(0);
+            players.set(0, players.get(1));
+            players.set(1, temp);
+        } else {
+            System.out.println("Cannot swap players: Insufficient players in the game.");
+        }
     }
 
     private int generateRandomNumber() {
-//         Random random = new Random();
-//         return random.nextInt(Integer.MAX_VALUE);
-
-        return 56;
+        Random random = new Random();
+        return random.nextInt(Integer.MAX_VALUE);
     }
 }
 

@@ -5,16 +5,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @ToString
 public class Game {
     private String id;
-    private Player[] players;
+    private final LinkedList<Player> players;
 
     private boolean winner;
     private boolean loser;
@@ -22,83 +19,67 @@ public class Game {
     @Setter
     private boolean automatic;
 
-    private static final int MAX_PLAYERS = 2;
-
     public Game() {
         this.id = UUID.randomUUID().toString();
-        this.players = new Player[MAX_PLAYERS];
+        this.players = new LinkedList<>();
         this.winner = false;
         this.loser = false;
         this.automatic = true;
     }
 
-    public Game(Player[] players) {
-        if (players.length <= MAX_PLAYERS) {
-            this.players = Arrays.copyOf(players, MAX_PLAYERS);
-        }
+    public Game(LinkedList<Player> players) {
+        this.players = players;
     }
 
     public void addPlayer(Player player) {
-        for (int i = 0; i < MAX_PLAYERS; i++) {
-            if (players[i] == null) {
-                players[i] = player;
-                break;
-            }
-        }
+        addUnique(players, player);
     }
 
     public void removePlayer(Player player) {
-        List<Player> playerList = Arrays.asList(players);
-        playerList.remove(player);
-        players = playerList.toArray(new Player[0]);
+        players.remove(player);
     }
 
-    public Player findPlayerById(String id) {
-        for (Player player : players) {
-            if (player != null && player.getId().equals(id)) {
-                return player;
-            }
-        }
-
-        return null; // Player not found
+    public Optional<Player> findById(LinkedList<Player> players, String id) {
+        return players.stream()
+                .filter(player -> player.getId().equals(id))
+                .findFirst();
     }
 
-    public PlayerMove handleMove(Player player, int opponentIndex, int move) {
+    public Optional<PlayerMove> handleMove(Player player, int opponentIndex, int move) {
         if (isWinner() || isLoser()) {
-            return null;
+            return Optional.empty();
         }
 
         Move currentMove;
         if (player.getMoves().isEmpty()) {
             currentMove = player.makeMove(
-                    getPlayers()[0].getLatestMove().getStartingNumber(),
-                    getPlayers()[0].getLatestMove().getCurrentNumber(), move);
+                    players.get(0).getLatestMove().getStartingNumber(),
+                    players.get(0).getLatestMove().getCurrentNumber(), move);
         } else {
             currentMove = player.makeMove(
                     player.getLatestMove().getStartingNumber(),
-                    getPlayers()[opponentIndex].getLatestMove().getCurrentNumber(), move);
+                    players.get(opponentIndex).getLatestMove().getCurrentNumber(), move);
         }
 
-        return getPlayerMove(player, currentMove);
+        return Optional.ofNullable(getPlayerMove(player, currentMove));
     }
 
-    public PlayerMove handleAutoMove(Player player, int opponentIndex) {
+    public Optional<PlayerMove> handleAutoMove(Player player, int opponentIndex) {
         if (isWinner()) {
-            return null;
+            return Optional.empty();
         }
 
         Move currentMove;
         if (player.getMoves().isEmpty()) {
-            currentMove = player.generateAutoMove(
-                    getPlayers()[0].getLatestMove().getStartingNumber(),
-                    getPlayers()[0].getLatestMove().getCurrentNumber());
+            int startingNumber = players.get(0).getLatestMove().getStartingNumber();
+            int currentNumber = players.get(0).getLatestMove().getCurrentNumber();
+            currentMove = player.generateAutoMove(startingNumber, currentNumber);
         } else {
-            currentMove = player.generateAutoMove(
-                    player.getLatestMove().getStartingNumber(),
-                    getPlayers()[opponentIndex].getLatestMove().getCurrentNumber());
+            currentMove = player.generateAutoMove(player.getLatestMove().getStartingNumber(),
+                            players.get(opponentIndex).getLatestMove().getCurrentNumber());
         }
 
-        return getPlayerMove(player, currentMove);
+        return Optional.of(getPlayerMove(player, currentMove));
     }
 
     private PlayerMove getPlayerMove(Player player, Move currentMove) {
@@ -123,8 +104,15 @@ public class Game {
     }
 
     public void resetGame() {
-        Arrays.fill(players, null);
+        players.clear();
         winner = false;
         loser = false;
+        automatic = true;
+    }
+
+    public static void addUnique(LinkedList<Player> list, Player player) {
+        if (!list.contains(player)) {
+            list.add(player);
+        }
     }
 }
